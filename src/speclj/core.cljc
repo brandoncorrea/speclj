@@ -5,8 +5,8 @@
             [clojure.string]
             [speclj.components]
             [speclj.config]
-            #?(:clj  [speclj.platform :refer [if-cljs try-catch-anything]]
-               :cljs [speclj.platform])
+            #?(:clj  [speclj.platform :as platform :refer [if-cljs try-catch-anything]]
+               :cljs [speclj.platform :as platform])
             [speclj.reporting]
             [speclj.results]
             [speclj.running]
@@ -212,8 +212,8 @@
 (defmacro ^:no-doc wrong-types [assertion a b]
   `(let [a#      ~a
          b#      ~b
-         type-a# (if (nil? a#) "nil" (speclj.platform/type-name (type a#)))
-         type-b# (if (nil? b#) "nil" (speclj.platform/type-name (type b#)))]
+         type-a# (if (nil? a#) "nil" (platform/type-name (type a#)))
+         type-b# (if (nil? b#) "nil" (platform/type-name (type b#)))]
      (str ~assertion " doesn't know how to handle these types: [" type-a# " " type-b# "]")))
 
 (defmacro should
@@ -234,11 +234,11 @@
   ([expected-form actual-form]
    `(let [expected# ~expected-form actual# ~actual-form]
       (when-not (= expected# actual#)
-        (-fail (str "Expected: " (-to-s expected#) speclj.platform/endl "     got: " (-to-s actual#) " (using =)")))))
+        (-fail (str "Expected: " (-to-s expected#) platform/endl "     got: " (-to-s actual#) " (using =)")))))
   ([expected-form actual-form delta-form]
    `(let [expected# ~expected-form actual# ~actual-form delta# ~delta-form]
-      (when (speclj.platform/difference-greater-than-delta? expected# actual# delta#)
-        (-fail (str "Expected: " (-to-s expected#) speclj.platform/endl "     got: " (-to-s actual#) " (using delta: " delta# ")"))))))
+      (when (platform/difference-greater-than-delta? expected# actual# delta#)
+        (-fail (str "Expected: " (-to-s expected#) platform/endl "     got: " (-to-s actual#) " (using delta: " delta# ")"))))))
 
 (defmacro should-be
   "Asserts that a form satisfies a function."
@@ -259,21 +259,21 @@
   [expected-form actual-form]
   `(let [expected# ~expected-form actual# ~actual-form]
      (when (= expected# actual#)
-       (-fail (str "Expected: " (-to-s expected#) speclj.platform/endl "not to =: " (-to-s actual#))))))
+       (-fail (str "Expected: " (-to-s expected#) platform/endl "not to =: " (-to-s actual#))))))
 
 (defmacro should-be-same
   "Asserts that two forms evaluate to the same object, with the expected value as the first parameter."
   [expected-form actual-form]
   `(let [expected# ~expected-form actual# ~actual-form]
      (if (not (identical? expected# actual#))
-       (-fail (str "         Expected: " (-to-s expected#) speclj.platform/endl "to be the same as: " (-to-s actual#) " (using identical?)")))))
+       (-fail (str "         Expected: " (-to-s expected#) platform/endl "to be the same as: " (-to-s actual#) " (using identical?)")))))
 
 (defmacro should-not-be-same
   "Asserts that two forms evaluate to different objects, with the unexpected value as the first parameter."
   [expected-form actual-form]
   `(let [expected# ~expected-form actual# ~actual-form]
      (when (identical? expected# actual#)
-       (-fail (str "             Expected: " (-to-s expected#) speclj.platform/endl "not to be the same as: " (-to-s actual#) " (using identical?)")))))
+       (-fail (str "             Expected: " (-to-s expected#) platform/endl "not to be the same as: " (-to-s actual#) " (using identical?)")))))
 
 (defmacro should-be-nil
   "Asserts that the form evaluates to nil"
@@ -291,19 +291,19 @@
   `(let [expected# ~expected
          actual#   ~actual]
      (cond
-       (nil? actual#) (-fail (str "Expected: " (-to-s expected#) speclj.platform/endl "to be in: nil"))
+       (nil? actual#) (-fail (str "Expected: " (-to-s expected#) platform/endl "to be in: nil"))
        (and (string? expected#) (string? actual#))
        (when (= -1 (.indexOf actual# expected#))
-         (-fail (str "Expected: " (-to-s expected#) speclj.platform/endl "to be in: " (-to-s actual#) " (using .contains)")))
-       (and (speclj.platform/re? expected#) (string? actual#))
+         (-fail (str "Expected: " (-to-s expected#) platform/endl "to be in: " (-to-s actual#) " (using .contains)")))
+       (and (platform/re? expected#) (string? actual#))
        (when (empty? (re-seq expected# actual#))
-         (-fail (str "Expected: " (-to-s actual#) speclj.platform/endl "to match: " (-to-s expected#) " (using re-seq)")))
+         (-fail (str "Expected: " (-to-s actual#) platform/endl "to match: " (-to-s expected#) " (using re-seq)")))
        (map? actual#)
        (when (not (contains? actual# expected#))
-         (-fail (str "Expected: " (-to-s expected#) speclj.platform/endl "to be a key in: " (-to-s actual#) " (using contains?)")))
+         (-fail (str "Expected: " (-to-s expected#) platform/endl "to be a key in: " (-to-s actual#) " (using contains?)")))
        (coll? actual#)
        (when (not (some #(= expected# %) actual#))
-         (-fail (str "Expected: " (-to-s expected#) speclj.platform/endl "to be in: " (-to-s actual#) " (using =)")))
+         (-fail (str "Expected: " (-to-s expected#) platform/endl "to be in: " (-to-s actual#) " (using =)")))
        :else (throw (-new-exception (wrong-types "should-contain" expected# actual#))))))
 
 (defmacro should-not-contain
@@ -315,16 +315,16 @@
        (nil? actual#) nil ; automatic pass!
        (and (string? expected#) (string? actual#))
        (when (not (= -1 (.indexOf actual# expected#)))
-         (-fail (str "Expected: " (-to-s expected#) speclj.platform/endl "not to be in: " (-to-s actual#) " (using .contains)")))
-       (and (speclj.platform/re? expected#) (string? actual#))
+         (-fail (str "Expected: " (-to-s expected#) platform/endl "not to be in: " (-to-s actual#) " (using .contains)")))
+       (and (platform/re? expected#) (string? actual#))
        (when (not (empty? (re-seq expected# actual#)))
-         (-fail (str "Expected: " (-to-s actual#) speclj.platform/endl "not to match: " (-to-s expected#) " (using re-seq)")))
+         (-fail (str "Expected: " (-to-s actual#) platform/endl "not to match: " (-to-s expected#) " (using re-seq)")))
        (map? actual#)
        (when (contains? actual# expected#)
-         (-fail (str "Expected: " (-to-s expected#) speclj.platform/endl "not to be a key in: " (-to-s actual#) " (using contains?)")))
+         (-fail (str "Expected: " (-to-s expected#) platform/endl "not to be a key in: " (-to-s actual#) " (using contains?)")))
        (coll? actual#)
        (when (some #(= expected# %) actual#)
-         (-fail (str "Expected: " (-to-s expected#) speclj.platform/endl "not to be in: " (-to-s actual#) " (using =)")))
+         (-fail (str "Expected: " (-to-s expected#) platform/endl "not to be in: " (-to-s actual#) " (using =)")))
        :else (throw (-new-exception (wrong-types "should-not-contain" expected# actual#))))))
 
 (defmacro should-have-count
@@ -342,8 +342,8 @@
        (throw (-new-exception (wrong-types "should-have-count" expected# coll#)))
        (let [actual# (count coll#)]
          (when-not (= expected# actual#)
-           (-fail (str "Expected count: " expected# speclj.platform/endl
-                       "Actual count:   " actual# speclj.platform/endl
+           (-fail (str "Expected count: " expected# platform/endl
+                       "Actual count:   " actual# platform/endl
                        "Actual coll:    " (-to-s coll#))))))))
 
 (defmacro should-not-have-count
@@ -361,7 +361,7 @@
        (throw (-new-exception (wrong-types "should-not-have-count" expected# coll#)))
        (let [actual# (count coll#)]
          (when (= expected# actual#)
-           (-fail (str "Expected count to not equal " expected# " (but it did!)" speclj.platform/endl
+           (-fail (str "Expected count to not equal " expected# " (but it did!)" platform/endl
                        "Collection: " (-to-s coll#))))))))
 
 (defmacro ^:no-doc -remove-first [coll value]
@@ -399,7 +399,7 @@
      (cond
        (and (string? prefix#) (string? whole#))
        (when-not (clojure.string/starts-with? whole# prefix#)
-         (-fail (str "Expected \"" whole# "\" to start" speclj.platform/endl
+         (-fail (str "Expected \"" whole# "\" to start" platform/endl
                      "    with \"" prefix# "\"")))
 
        (and (coll? whole#) (coll? prefix#))
@@ -407,7 +407,7 @@
              extra#   (-coll-difference actual# prefix#)
              missing# (-coll-difference prefix# actual#)]
          (when-not (and (empty? extra#) (empty? missing#))
-           (-fail (str "Expected " (-to-s whole#) " to start" speclj.platform/endl
+           (-fail (str "Expected " (-to-s whole#) " to start" platform/endl
                        "    with " (-to-s prefix#)))))
 
        :else
@@ -421,7 +421,7 @@
      (cond
        (and (string? prefix#) (string? whole#))
        (when (clojure.string/starts-with? whole# prefix#)
-         (-fail (str "Expected \"" whole# "\" to NOT start" speclj.platform/endl
+         (-fail (str "Expected \"" whole# "\" to NOT start" platform/endl
                      "    with \"" prefix# "\"")))
 
        (and (coll? whole#) (coll? prefix#))
@@ -429,7 +429,7 @@
              extra#   (-coll-difference actual# prefix#)
              missing# (-coll-difference prefix# actual#)]
          (when (and (empty? extra#) (empty? missing#))
-           (-fail (str "Expected " (-to-s whole#) " to NOT start" speclj.platform/endl
+           (-fail (str "Expected " (-to-s whole#) " to NOT start" platform/endl
                        "    with " (-to-s prefix#)))))
 
        :else (throw (-new-exception (wrong-types "should-not-start-with" prefix# whole#))))))
@@ -490,9 +490,9 @@
 
 (defmacro ^:no-doc -difference-message [expected actual extra missing]
   `(str
-     "Expected contents: " (-to-s ~expected) speclj.platform/endl
-     "              got: " (-to-s ~actual) speclj.platform/endl
-     "          missing: " (-to-s ~missing) speclj.platform/endl
+     "Expected contents: " (-to-s ~expected) platform/endl
+     "              got: " (-to-s ~actual) platform/endl
+     "          missing: " (-to-s ~missing) platform/endl
      "            extra: " (-to-s ~extra)))
 
 (defmacro should==
@@ -510,7 +510,7 @@
            (-fail (-difference-message expected# actual# extra# missing#))))
        (and (number? expected#) (number? actual#))
        (when-not (== expected# actual#)
-         (-fail (str "Expected: " (-to-s expected#) speclj.platform/endl "     got: " (-to-s actual#) " (using ==)")))
+         (-fail (str "Expected: " (-to-s expected#) platform/endl "     got: " (-to-s actual#) " (using ==)")))
        :else (throw (-new-exception (wrong-types "should==" expected# actual#))))))
 
 (defmacro should-not==
@@ -525,10 +525,10 @@
        (let [extra#   (-coll-difference actual# expected#)
              missing# (-coll-difference expected# actual#)]
          (when (and (empty? extra#) (empty? missing#))
-           (-fail (str "Expected contents: " (-to-s expected#) speclj.platform/endl "   to differ from: " (-to-s actual#)))))
+           (-fail (str "Expected contents: " (-to-s expected#) platform/endl "   to differ from: " (-to-s actual#)))))
        (and (number? expected#) (number? actual#))
        (when-not (not (== expected# actual#))
-         (-fail (str " Expected: " (-to-s expected#) speclj.platform/endl "not to ==: " (-to-s actual#) " (using ==)")))
+         (-fail (str " Expected: " (-to-s expected#) platform/endl "not to ==: " (-to-s actual#) " (using ==)")))
        :else (throw (-new-exception (wrong-types "should-not==" expected# actual#))))))
 
 (defmacro should-not-be-nil
@@ -542,10 +542,10 @@
   ([message] `(-fail ~message)))
 
 (defmacro ^:no-doc -create-should-throw-failure [expected actual expr]
-  `(let [expected-name# (speclj.platform/type-name ~expected)
+  `(let [expected-name# (platform/type-name ~expected)
          expected-gaps# (apply str (repeat (count expected-name#) " "))
          actual-string# (if-let [actual# ~actual] (pr-str actual#) "<nothing thrown>")]
-     (-new-failure (str "Expected " expected-name# " thrown from: " (pr-str ~expr) speclj.platform/endl
+     (-new-failure (str "Expected " expected-name# " thrown from: " (pr-str ~expr) platform/endl
                         "         " expected-gaps# "     but got: " actual-string#))))
 
 (defmacro should-throw
@@ -555,31 +555,30 @@ There are three options for passing different kinds of predicates:
   - If a string, assert that the message of the Exception is equal to the string.
   - If a regex, asserts that the message of the Exception matches the regex.
   - If a function, assert that calling the function on the Exception returns a truthy value."
-  ([form] `(should-throw speclj.platform/throwable ~form))
+  ([form] `(should-throw platform/throwable ~form))
   ([throwable-type form]
    `(try-catch-anything
       ~form
       (throw (-create-should-throw-failure ~throwable-type nil '~form))
       (catch e#
              (cond
-               (speclj.platform/failure? e#) (throw e#)
+               (platform/failure? e#) (throw e#)
                (not (instance? ~throwable-type e#)) (throw (-create-should-throw-failure ~throwable-type e# '~form))
                :else e#))))
   ([throwable-type predicate form]
-   `(let [e#     (should-throw ~throwable-type ~form)
-          regex# (if-cljs js/RegExp java.util.regex.Pattern)]
+   `(let [e# (should-throw ~throwable-type ~form)]
       (try-catch-anything
         (let [predicate# ~predicate]
-          (cond (instance? regex# predicate#)
-                (should-not-be-nil (re-find predicate# (speclj.platform/error-message e#)))
+          (cond (platform/re? predicate#)
+                (should-not-be-nil (re-find predicate# (platform/error-message e#)))
 
                 (ifn? predicate#)
                 (should= true (predicate# e#))
 
                 :else
-                (should= predicate# (speclj.platform/error-message e#))))
+                (should= predicate# (platform/error-message e#))))
 
-        (catch f# (-fail (str "Expected exception predicate didn't match" speclj.platform/endl (speclj.platform/error-message f#))))))))
+        (catch f# (-fail (str "Expected exception predicate didn't match" platform/endl (platform/error-message f#))))))))
 
 (defmacro should-not-throw
   "Asserts that nothing is thrown by the evaluation of a form."
@@ -587,7 +586,7 @@ There are three options for passing different kinds of predicates:
   `(try-catch-anything
      ~form
      (catch e#
-            (-fail (str "Expected nothing thrown from: " (pr-str '~form) speclj.platform/endl
+            (-fail (str "Expected nothing thrown from: " (pr-str '~form) platform/endl
                         "                     but got: " (pr-str e#))))))
 
 (defmacro should-be-a
@@ -597,7 +596,7 @@ There are three options for passing different kinds of predicates:
          actual-type#   (type actual#)
          expected-type# ~expected-type]
      (when-not (isa? actual-type# expected-type#)
-       (-fail (str "Expected " (-to-s actual#) " to be an instance of: " (-to-s expected-type#) speclj.platform/endl "           but was an instance of: " (-to-s actual-type#) " (using isa?)")))))
+       (-fail (str "Expected " (-to-s actual#) " to be an instance of: " (-to-s expected-type#) platform/endl "           but was an instance of: " (-to-s actual-type#) " (using isa?)")))))
 
 (defmacro should-not-be-a
   "Asserts that the type of the given form does not derive from or equal the expected type"
@@ -683,19 +682,19 @@ There are three options for passing different kinds of predicates:
         (let [matching-invocations# (filter #(speclj.stub/params-match? with# %) invocations#)
               matching-count#       (count matching-invocations#)]
           (when-not (= times# matching-count#)
-            (-fail (str "Expected: " times# " " (invocations-str# times#) " of " name# " with " (pr-str with#) speclj.platform/endl "     got: " matching-count# " " (invocations-str# matching-count#)))))
+            (-fail (str "Expected: " times# " " (invocations-str# times#) " of " name# " with " (pr-str with#) platform/endl "     got: " matching-count# " " (invocations-str# matching-count#)))))
 
         check-params?#
         (when-not (some #(speclj.stub/params-match? with# %) invocations#)
-          (-fail (str "Expected: invocation of " name# " with " (pr-str with#) speclj.platform/endl "     got: " (pr-str invocations#))))
+          (-fail (str "Expected: invocation of " name# " with " (pr-str with#) platform/endl "     got: " (pr-str invocations#))))
 
         times?#
         (when-not (= times# (count invocations#))
-          (-fail (str "Expected: " times# " " (invocations-str# times#) " of " name# speclj.platform/endl "     got: " (count invocations#))))
+          (-fail (str "Expected: " times# " " (invocations-str# times#) " of " name# platform/endl "     got: " (count invocations#))))
 
         :else
         (when-not (seq invocations#)
-          (-fail (str "Expected: an invocation of " name# speclj.platform/endl "     got: " (count invocations#))))
+          (-fail (str "Expected: an invocation of " name# platform/endl "     got: " (count invocations#))))
 
         ))))
 
@@ -735,19 +734,19 @@ There are three options for passing different kinds of predicates:
         (let [matching-invocations# (filter #(speclj.stub/params-match? with# %) invocations#)
               matching-count#       (count matching-invocations#)]
           (when (= times# matching-count#)
-            (-fail (str "Expected: " name# " not to have been invoked " times# " time" (add-s# matching-count#) " with " (pr-str with#) speclj.platform/endl "     got: " matching-count# " invocation" (add-s# matching-count#)))))
+            (-fail (str "Expected: " name# " not to have been invoked " times# " time" (add-s# matching-count#) " with " (pr-str with#) platform/endl "     got: " matching-count# " invocation" (add-s# matching-count#)))))
 
         times?#
         (when (= times# (count invocations#))
-          (-fail (str "Expected: " name# " not to have been invoked " times# " time" (add-s# times#) speclj.platform/endl "     got: " times# " invocation" (add-s# times#))))
+          (-fail (str "Expected: " name# " not to have been invoked " times# " time" (add-s# times#) platform/endl "     got: " times# " invocation" (add-s# times#))))
 
         check-params?#
         (when (some #(speclj.stub/params-match? with# %) invocations#)
-          (-fail (str "Expected: " name# " not to have been invoked with " (pr-str with#) speclj.platform/endl "     got: " (pr-str invocations#))))
+          (-fail (str "Expected: " name# " not to have been invoked with " (pr-str with#) platform/endl "     got: " (pr-str invocations#))))
 
         :else
         (when (seq invocations#)
-          (-fail (str "Expected: 0 invocations of " name# speclj.platform/endl "     got: " (count invocations#))))
+          (-fail (str "Expected: 0 invocations of " name# platform/endl "     got: " (count invocations#))))
 
         ))))
 
@@ -760,9 +759,9 @@ There are three options for passing different kinds of predicates:
           *bound-by-should-invoke*)))
 
 (defmacro ^:no-doc with-stubbed-invocations [& body]
-  `(if (not (speclj.platform/bound-by-should-invoke?))
+  `(if (not (platform/bound-by-should-invoke?))
      (with-redefs [speclj.stub/*stubbed-invocations*        (atom [])
-                   speclj.platform/*bound-by-should-invoke* true]
+                   platform/*bound-by-should-invoke* true]
        ~@body)
      (do ~@body)))
 
