@@ -14,13 +14,15 @@
                  :watch-fn       (fn [] (println "Success!"))
                  }
    :ci          {
-                 :cache-analysis false
-                 :optimizations  :advanced
-                 :output-to      "target/specs.js"
-                 :output-dir     "target/cljs"
-                 :pretty-print   false
-                 :verbose        false
-                 :watch-fn       (fn [] (println "Success!"))
+                 ; Unreachable try/catch macros in spec-helper – let it pass
+                 :closure-warnings {:check-useless-code :off}
+                 :cache-analysis   false
+                 :optimizations    :advanced
+                 :output-to        "target/specs.js"
+                 :output-dir       "target/cljs"
+                 :pretty-print     false
+                 :verbose          false
+                 :watch-fn         (fn [] (println "Success!"))
                  }})
 
 (defn ->build-key [build-key]
