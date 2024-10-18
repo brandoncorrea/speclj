@@ -33,7 +33,7 @@
 
 (defn javac [_]
   (println "compiling java")
-  (b/javac {:src-dirs ["src"]
+  (b/javac {:src-dirs ["src/java" "src/clj" "src/cljc"]
             :class-dir class-dir
             :basis basis
             :javac-opts ["--release" "11"]}))
