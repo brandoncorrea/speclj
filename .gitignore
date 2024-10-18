@@ -2,6 +2,8 @@
 .cpcache
 .DS_Store
 .idea
+.clj-kondo
+.lsp
 .lein*
 .specljs-timestamp
 doc
