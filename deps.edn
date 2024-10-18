@@ -12,7 +12,7 @@
                                  org.clojure/clojurescript     {:mvn/version "1.11.132"}
                                  cloverage/cloverage           {:mvn/version "1.2.4"}
                                  }
-                   :extra-paths ["dev" "spec" "target/classes"]}
+                   :extra-paths ["dev" "spec/clj" "spec/cljc" "spec/cljs" "target/classes"]}
            :spec  {:main-opts ["-m" "speclj.main" "-c"]}
            :cljs  {:extra-paths ["src/cljs"]
                    :main-opts   ["-m" "speclj.dev.cljs"]}
