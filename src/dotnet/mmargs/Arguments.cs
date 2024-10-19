@@ -9,44 +9,44 @@ public class Arguments
     private ICollection<Parameter> parameters = new LinkedList<Parameter>();
     private ICollection<Option> options = new LinkedList<Option>();
 
-    public void AddParameter(string name, string description)
+    public void addParameter(string name, string description)
     {
         parameters.Add(new Parameter(name, description, true, false));
     }
 
-    public void AddOptionalParameter(string name, string description)
+    public void addOptionalParameter(string name, string description)
     {
         parameters.Add(new Parameter(name, description, false, false));
     }
 
-    public void AddMultiParameter(string name, string description)
+    public void addMultiParameter(string name, string description)
     {
         parameters.Add(new Parameter(name, description, false, true));
     }
 
-    public void AddSwitchOption(string shortName, string fullName, string description)
+    public void addSwitchOption(string shortName, string fullName, string description)
     {
-        AddValueOption(shortName, fullName, null, description);
+        addValueOption(shortName, fullName, null, description);
     }
 
-    public void AddValueOption(string shortName, string fullName, string valueDescription, string description)
+    public void addValueOption(string shortName, string fullName, string valueDescription, string description)
     {
-        AddValueOption(shortName, fullName, valueDescription, description, false);
+        addValueOption(shortName, fullName, valueDescription, description, false);
     }
 
-    private void AddValueOption(string shortName, string fullName, string valueDescription, string description, bool multi)
+    private void addValueOption(string shortName, string fullName, string valueDescription, string description, bool multi)
     {
       if (shortName == null || fullName == null)
           throw new SystemException("Options require a shortName and fullName");
       options.Add(new Option(shortName, fullName, valueDescription, description, multi));
     }
 
-    public void AddMultiOption(String shortName, String fullName, String valueDescription, String description)
+    public void addMultiOption(String shortName, String fullName, String valueDescription, String description)
     {
-        AddValueOption(shortName, fullName, valueDescription, description, true);
+        addValueOption(shortName, fullName, valueDescription, description, true);
     }
 
-    public Dictionary<string, object> Parse(params string[] args)
+    public Dictionary<string, object> parse(params string[] args)
     {
         var results = new Dictionary<string, object>();
         LinkedList<string> parameters = ParseOptions(args, results);
@@ -57,7 +57,7 @@ public class Arguments
         return results;
     }
 
-    public String ArgString()
+    public String argString()
     {
         var sb = new StringBuilder();
         if (options.Count > 0)
@@ -77,7 +77,7 @@ public class Arguments
         return sb.ToString();
     }
 
-    public string ParametersString()
+    public string parametersString()
     {
       string[] names = new string[parameters.Count];
       string[] descriptions = new string[parameters.Count];
@@ -90,7 +90,7 @@ public class Arguments
       return Tabularize(names, descriptions);
     }
 
-    public string OptionsString()
+    public string optionsString()
     {
         string[] heads = new string[options.Count];
         string[] descriptions = new string[options.Count];
