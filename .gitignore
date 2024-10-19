@@ -4,8 +4,11 @@
 .idea
 .clj-kondo
 .lsp
+.vs
 .lein*
 .specljs-timestamp
+bin
+obj
 doc
 node_modules
 package-lock.json
