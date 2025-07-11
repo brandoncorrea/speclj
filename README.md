@@ -343,6 +343,15 @@ bb spec -a   # auto running with doc output
 bb spec <OPTIONS>
 ```
 
+## ClojureDart
+
+Run specs
+```bash
+clj -M:test -m cljd.build compile <SPEC_NSES>
+dart lib/cljd-out/<PROJECT>/<SPEC_NS>.dart
+```
+
+
 # Code Coverage
 
 Speclj integrated with [Cloverage](https://github.com/cloverage/cloverage) for all your code coverage needs.  Make sure

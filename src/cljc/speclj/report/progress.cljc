@@ -48,7 +48,7 @@
     (println)
     (println (indent 1 number ") " (red (str (.-exception result)))))
     (println (grey (indent 2.5 (stack-trace-str (.-exception result))))))
-  (flush))
+  (platform/flush))
 
 (defn- print-duration [results]
   (println)
@@ -95,16 +95,16 @@
 (deftype ProgressReporter []
   speclj.reporting/Reporter
   (report-message [_this message]
-    (println message) (flush))
+    (println message) (platform/flush))
   (report-description [_this _description])
   (report-pass [_this _result]
-    (print (green ".")) (flush))
+    (print (green ".")) (platform/flush))
   (report-pending [_this _result]
-    (print (yellow "*")) (flush))
+    (print (yellow "*")) (platform/flush))
   (report-fail [_this _result]
-    (print (red "F")) (flush))
+    (print (red "F")) (platform/flush))
   (report-error [_this _result]
-    (print (red "E")) (flush))
+    (print (red "E")) (platform/flush))
   (report-runs [_this results]
     (println)
     (print-summary results)))

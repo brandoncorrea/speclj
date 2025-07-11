@@ -1,0 +1,29 @@
+(ns speclj.io
+  (:require ["dart:io" :as io]
+            ["package:path/path.dart" :as path]))
+
+(defn as-file
+  ([parent child])
+  ([file-name]
+   (if (instance? io/FileSystemEntity file-name)
+     file-name
+     (let [file (io/File. file-name)]
+       (if (.existsSync file)
+         file
+         (io/Directory. file-name))))))
+
+(defn canonical-path [file])
+(defn canonical-file [file] (.-absolute file))
+(defn hidden? [file])
+
+(defn file-name [file] (path/basename (.-path file)))
+(defn full-name [file] (.-path file))
+(defn exists? [file])
+(defn parent-file [file])
+
+(defn ->LineNumberingReader [reader])
+(defn ->StringReader [s])
+(defn ->StringWriter [])
+
+(defn copy [input output])
+(defn make-parents [file])

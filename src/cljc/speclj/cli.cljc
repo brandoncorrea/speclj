@@ -1,11 +1,13 @@
 (ns speclj.cli
-  (:require #?(:clj [trptcolin.versioneer.core :as version])
+  (:require #?@(:cljd []
+                :clj  [[trptcolin.versioneer.core :as version]])
             [speclj.args :as args]
             [clojure.set :as set]
+            #?(:cljd [speclj.report.documentation :refer [new-documentation-reporter]])
             [speclj.config :as config]
             [speclj.platform :refer [endl print-stack-trace]]
             [speclj.reporting :refer [report-message* stack-trace-str]]
-            [speclj.run.standard]
+            [speclj.run.standard :refer [new-standard-runner]]
             [speclj.running :refer [run-directories]]
             [speclj.stub]
             [speclj.tags :refer [describe-filter]]))
@@ -93,16 +95,33 @@
     (merge config/default-config options)))
 
 (defn do-specs [config]
-  (config/with-config config
-    (fn []
-      (try
-        (when-let [filter-msg (describe-filter)]
-          (report-message* config/*reporters* filter-msg))
-        (run-directories config/*runner* config/*specs* config/*reporters*)
-        (catch #?(:cljs :default :default Exception) e
-          (print-stack-trace e)
-          (println (stack-trace-str e))
-          -1)))))
+  #?(:cljd
+     (binding [config/*runner*            (new-standard-runner)
+               config/*reporters*         [(new-documentation-reporter)]
+               config/*specs*             (:specs config)
+               config/*color?*            (:color config)
+               config/*omit-pending?*     (:omit-pending config)
+               config/*full-stack-trace?* (some? (:stacktrace config))
+               config/*tag-filter*        (config/parse-tags (:tags config))]
+       (try
+         (when-let [filter-msg (describe-filter)]
+           (report-message* config/*reporters* filter-msg))
+         (run-directories config/*runner* config/*specs* config/*reporters*)
+         (catch Exception e
+           (print-stack-trace e)
+           (println (stack-trace-str e))
+           -1)))
+     :default
+     (config/with-config config
+       (fn []
+         (try
+           (when-let [filter-msg (describe-filter)]
+             (report-message* config/*reporters* filter-msg))
+           (run-directories config/*runner* config/*specs* config/*reporters*)
+           (catch #?(:cljs :default :default Exception) e
+             (print-stack-trace e)
+             (println (stack-trace-str e))
+             -1))))))
 
 (defn run [& args]
   (let [config (apply parse-args args)]

@@ -69,6 +69,7 @@
     description))
 
 (defn filter-focused [descriptions]
+  (prn "descriptions:" (count descriptions))
   (run! scan-for-focus! descriptions)
   (or (seq (filter focus-mode? descriptions)) descriptions))
 
@@ -119,7 +120,7 @@
       (try
         (full-body)
         (report-result pass-result characteristic start-time reporters nil @components/*assertions*)
-        (catch #?(:clj java.lang.Throwable :cljr Exception :cljs :default) e
+        (catch #?(:cljd Object :clj java.lang.Throwable :cljs :default :default Exception) e
           (if (pending? e)
             (report-result pending-result characteristic start-time reporters e nil)
             (report-result fail-result characteristic start-time reporters e @components/*assertions*)))
@@ -157,6 +158,9 @@
          (finally
            (run! #((.-set-var! %) nil) withs)))))
 
+   :cljd
+   (defn- with-withs-bound [_description body] (body))
+
    :default
    (defn- with-withs-bound [description body]
      (let [withs                (concat @(.-withs description) @(.-with-alls description))
@@ -191,6 +195,7 @@
 
                 (finally
                   (reset-withs @(.-with-alls description)))))))))))
+
 (defn process-compile-error [runner e]
   (let [error-result (error-result e)]
     (swap! (.-results runner) conj error-result)

@@ -13,7 +13,7 @@
 (deftype ClojureTestReporter [report-counters]
   speclj.reporting/Reporter
   (report-message [_this message]
-    (println message) (flush))
+    (println message) (platform/flush))
 
   (report-description [_this _description])
 

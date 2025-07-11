@@ -1,4 +1,5 @@
 (ns speclj.platform
+  (:refer-clojure :rename {flush core-flush})
   (:require [clojure.string :as str]))
 
 (def endl "\n")
@@ -44,3 +45,4 @@
     (js* "eval(~{code})")))
 
 (defn get-name [ns] (.name ns))
+(defn flush [] (core-flush))

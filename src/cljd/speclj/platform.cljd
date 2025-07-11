@@ -1,0 +1,68 @@
+(ns speclj.platform)
+
+(defmacro if-cljs
+  "Return then if we are generating cljs code and else for Clojure code.
+   http://blog.nberger.com.ar/blog/2015/09/18/more-portable-complex-macro-musing
+   https://github.com/nberger/more-macro-musings"
+  [then else]
+  (if (:ns &env) then else))
+
+(defmacro try-catch-anything
+  "Tries forms up until the last form, which is expected to be a `catch` form,
+  except its type is missing; instead, `:default` is used in ClojureScript and
+  `java.lang.Throwable` is used in Clojure JVM."
+  [& forms]
+  (let [body         (butlast forms)
+        catch-form   (last forms)
+        [catch-sym binding & catch-forms] (if (sequential? catch-form) catch-form [nil nil nil])
+        catch-valid? (and (= 'catch catch-sym) (symbol? binding))]
+    (if catch-valid?
+      `(if-cljs
+         (try ~@body
+              (catch :default ~binding ~@catch-forms))
+         (try ~@body
+              (catch Exception ~binding ~@catch-forms)))
+      `(throw (ex-info "Invalid catch form" {:catch '~catch-form})))))
+
+(def endl "\n")
+(def file-separator "/")
+(def source-file-regex #".*\.(cljc|cljd)")
+(def find-platform nil)
+
+(defn re? [obj] (instance? RegExp obj))
+
+(def throwable Object)
+(def exception Exception)
+
+(defn bound-by-should-invoke? [] false)
+
+(defn difference-greater-than-delta? [expected actual delta]
+  (> (abs (- expected actual))
+     (abs delta)))
+
+(defn error-message [e] nil)
+(defn error-str [e] (str e))
+(defn stack-trace [e] nil)
+(defn cause [e] nil)
+(defn print-stack-trace [e] nil)
+(defn failure-source [failure] nil)
+(defn failure-source-str [exception] nil)
+(defn elide-level? [stack-element] false)
+(defn type-name [t] nil)
+
+(defn current-date [] (DateTime/now))
+(defn format-seconds [secs] (.toStringAsFixed secs 5))
+(defn current-time [] (.-microsecondsSinceEpoch (current-date)))
+(defn current-millis [] (.-millisecondsSinceEpoch (current-date)))
+(defn secs-since [start] (/ (double (- (current-time) start)) 1000000.0))
+
+(defn dynamically-invoke [_ns-name _fn-name])
+
+(defn read-in [] nil)
+(defn exit [code] nil)
+
+(defn compiler-load [reader path])
+
+(defn get-name [ns] nil)
+(defn get-bytes [s] nil)
+(defn flush [])

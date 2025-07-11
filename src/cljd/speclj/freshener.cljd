@@ -1,0 +1,22 @@
+(ns speclj.freshener
+  (:require ["dart:io" :as dart-io]
+            [speclj.io :as io]
+            [speclj.platform :as platform]))
+
+(defn files-in [dir]
+  (let [file (-> dir io/canonical-file io/as-file)]
+    (if (instance? dart-io/Directory file)
+      (mapcat files-in (.listSync file))
+      [file])))
+
+(defn find-files-in
+  "Returns a seq of all files (matching the regex) contained in the given directories."
+  [pattern & dirs]
+  (->> (mapcat files-in dirs)
+       (remove io/hidden?)
+       (filter #(re-matches pattern (io/file-name %)))))
+
+(defn clj-files-in
+  "Returns a seq of all clojure source files contained in the given directories."
+  [& dirs]
+  (apply find-files-in platform/source-file-regex dirs))

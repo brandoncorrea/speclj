@@ -1,4 +1,5 @@
 (ns speclj.platform
+  (:refer-clojure :rename {flush core-flush})
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.tools.namespace.find :as find]))
@@ -87,7 +88,7 @@
 (defn format-seconds [secs] (.format seconds-format secs))
 (defn current-time [] (System/nanoTime))
 (defn current-millis [] (System/currentTimeMillis))
-(defn secs-since [start] (/ (double (- (System/nanoTime) start)) 1000000000.0))
+(defn secs-since [start] (/ (double (- (current-time) start)) 1000000000.0))
 
 (defn dynamically-invoke [ns-name fn-name]
   (let [ns-sym (symbol ns-name)
@@ -103,3 +104,4 @@
 
 (defn get-name [ns] (.name ns))
 (defn get-bytes [s] (seq (.getBytes s)))
+(defn flush [] (core-flush))

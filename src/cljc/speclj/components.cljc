@@ -18,6 +18,16 @@
      object
      (install [_this _description] (comment "Whatever...  Let them pass.")))
 
+   :cljd
+   (extend-protocol SpecComponent
+     Object
+     (install [this description]
+       (if (seqable? this)
+         (doseq [component (seq this)] (install component description))
+         (comment "This prohibits multimethod defs, and other stuff.  Don't be so stingy! Let it pass.")))
+     Null
+     (install [_this _description] (throw (Exception. (str "Oops!  It looks like you tried to add 'nil' to a spec.  That's probably not what you wanted.")))))
+
    :default
    (extend-protocol SpecComponent
      Object
@@ -43,7 +53,7 @@
 (defn is-description? [component]
   (instance? Description component))
 
-(declare ^:dynamic *assertions*)
+(def ^:dynamic *assertions*)
 (defn inc-assertions! [] (swap! *assertions* inc))
 
 (deftype Characteristic [name parent body is-focused?]
@@ -113,7 +123,7 @@
   SpecComponent
   (install [this description]
     (swap! (.-withs description) conj this))
-  #?(:cljs cljs.core/IDeref :default clojure.lang.IDeref)
+  #?(:cljs cljs.core/IDeref :cljd cljd.core/IDeref :default clojure.lang.IDeref)
   (#?(:cljs -deref :default deref) [_this]
     (when (= ::none @value)
       (reset! value (body)))
@@ -132,7 +142,7 @@
   SpecComponent
   (install [this description]
     (swap! (.-with-alls description) conj this))
-  #?(:cljs cljs.core/IDeref :default clojure.lang.IDeref)
+  #?(:cljs cljs.core/IDeref :cljd cljd.core/IDeref :default clojure.lang.IDeref)
   (#?(:cljs -deref :default deref) [_this]
     (when (= ::none @value)
       (reset! value (body)))

@@ -30,7 +30,7 @@
 
   (report-message [_this message]
     (println message)
-    (flush))
+    (platform/flush))
 
   (report-description [_this description]
     (let [level (level-of description)]
@@ -39,7 +39,7 @@
                        (maybe-focused description)
                        maybe-profile)]
         (println output)
-        (flush))))
+        (platform/flush))))
 
   (report-pass [_this result]
     (let [characteristic (.-characteristic result)
@@ -48,7 +48,7 @@
                              (maybe-focused characteristic)
                              (maybe-profile result))]
       (println output)
-      (flush)))
+      (platform/flush)))
 
   (report-pending [_this result]
     (let [characteristic (.-characteristic result)
@@ -56,7 +56,7 @@
           output         (-> (yellow (indent (dec level) "- " (.-name characteristic) " (PENDING: " (platform/error-message (.-exception result)) ")"))
                              (maybe-profile result))]
       (println output)
-      (flush)))
+      (platform/flush)))
 
   (report-fail [_this result]
     (let [characteristic (.-characteristic result)
@@ -65,7 +65,7 @@
                              (maybe-focused characteristic)
                              (maybe-profile result))]
       (println output)
-      (flush)))
+      (platform/flush)))
 
   (report-error [_this result]
     (println (red (#?(:cljr .ToString :default .toString) (.-exception result)))))

@@ -1,36 +1,39 @@
 {
- :paths   ["src/clj" "src/cljc" "src/cljvm" "src/cljs" "src/cljr" "src/bb"]
- :deps    {
-           org.clojure/clojure         {:mvn/version "1.12.0"}
-           trptcolin/versioneer        {:mvn/version "0.1.1"}
-           org.clojure/tools.namespace {:mvn/version "1.5.0"}
-           }
- :aliases {
-           :test  {:extra-deps  {
-                                 io.github.clojure/tools.build {:mvn/version "0.10.7"}
-                                 org.clojure/clojurescript     {:mvn/version "1.11.132"}
-                                 cloverage/cloverage           {:mvn/version "1.2.4"}
-                                 leiningen-core/leiningen-core {:mvn/version "2.9.8"}
-                                 }
-                   :extra-paths ["dev" "spec/clj" "spec/cljc" "spec/cljs" "spec/cljvm" "spec/bb" "target/classes"]}
-           :spec  {:main-opts ["-m" "speclj.main" "-c"]}
-           :cljs  {:main-opts ["-m" "speclj.dev.cljs"]}
-           :build {:deps        {io.github.clojure/tools.build {:mvn/version "0.10.7"}
-                                 clj-commons/pomegranate       {:mvn/version "1.2.24"}
-                                 codox/codox                   {:mvn/version "0.10.8"}
-                                 leiningen-core/leiningen-core {:mvn/version "2.11.2"}
-                                 cloverage/cloverage           {:mvn/version "1.2.4"}
-                                 trptcolin/versioneer          {:mvn/version "0.1.1"}
-                                 }
-                   :ns-default  build
-                   :extra-paths ["dev" "target/classes"]}
-           :cov   {:main-opts ["-m" "speclj.cloverage" "-c"
-                               "--"
-                               "-p" "src/clj"
-                               "-p" "src/cljc"
-                               "-p" "src/cljvm"
-                               "-s" "spec/clj"
-                               "-s" "spec/cljc"
-                               "-s" "spec/cljvm"]}
-           }
+ :paths     ["src/clj" "src/cljc" "src/cljvm" "src/cljs" "src/cljr" "src/bb" "src/cljd"]
+ :cljd/opts {:kind :dart :main speclj.main}
+ :deps      {
+             org.clojure/clojure         {:mvn/version "1.12.1"}
+             trptcolin/versioneer        {:mvn/version "0.1.1"}
+             org.clojure/tools.namespace {:mvn/version "1.5.0"}
+             }
+ :aliases   {
+             :test  {:extra-deps  {
+                                   io.github.clojure/tools.build {:mvn/version "0.10.7"}
+                                   org.clojure/clojurescript     {:mvn/version "1.11.132"}
+                                   cloverage/cloverage           {:mvn/version "1.2.4"}
+                                   leiningen-core/leiningen-core {:mvn/version "2.9.8"}
+                                   tensegritics/clojuredart      {:git/url "https://github.com/tensegritics/ClojureDart.git" :sha "a32cb8677fcef987fb38f34f35ab6121dceba9d6"}
+                                   }
+                     :extra-paths ["dev" "spec/clj" "spec/cljc" "spec/cljs" "spec/cljvm" "spec/bb" "target/classes"]}
+             :spec  {:main-opts ["-m" "speclj.main" "-c"]}
+             :cljd  {:main-opts ["-m" "cljd.build"]}
+             :cljs  {:main-opts ["-m" "speclj.dev.cljs"]}
+             :build {:deps        {io.github.clojure/tools.build {:mvn/version "0.10.7"}
+                                   clj-commons/pomegranate       {:mvn/version "1.2.24"}
+                                   codox/codox                   {:mvn/version "0.10.8"}
+                                   leiningen-core/leiningen-core {:mvn/version "2.11.2"}
+                                   cloverage/cloverage           {:mvn/version "1.2.4"}
+                                   trptcolin/versioneer          {:mvn/version "0.1.1"}
+                                   }
+                     :ns-default  build
+                     :extra-paths ["dev" "target/classes"]}
+             :cov   {:main-opts ["-m" "speclj.cloverage" "-c"
+                                 "--"
+                                 "-p" "src/clj"
+                                 "-p" "src/cljc"
+                                 "-p" "src/cljvm"
+                                 "-s" "spec/clj"
+                                 "-s" "spec/cljc"
+                                 "-s" "spec/cljvm"]}
+             }
  }

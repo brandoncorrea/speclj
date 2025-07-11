@@ -1,9 +1,10 @@
 (ns speclj.stub)
 
-(declare ^:dynamic *stubbed-invocations*)
+(def ^:dynamic *stubbed-invocations*)
 
 (defn- check-recording []
   (when-not #?(:cljs    *stubbed-invocations*
+               :cljd    *stubbed-invocations*
                :default (bound? #'*stubbed-invocations*))
     (throw (new #?(:cljs js/Error :default Exception)
                 "Stub recoding not bound.  Please add (with-stubs) to the decribe/context."))))

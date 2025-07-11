@@ -1,4 +1,5 @@
 (ns speclj.platform
+  (:refer-clojure :rename {flush core-flush})
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.tools.namespace.find :as find]))
@@ -109,3 +110,4 @@
 (defn get-name [ns] (symbol (str ns)))
 (defn get-bytes [s] (seq (.getBytes s)))
 (defn read-in [] (.read *in*))
+(defn flush [] (core-flush))

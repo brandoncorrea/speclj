@@ -21,6 +21,10 @@
    (defn- load-spec [_spec-file]
      (js/alert "speclj.run.standard.load-spec:  I don't know how to do this."))
 
+   :cljd
+   (defn- load-spec [_spec-file]
+     (throw (Exception. "speclj.run.standard.load-spec:  I don't know how to do this.")))
+
    :bb
    (defn- load-spec [spec-file]
      (load-file spec-file))
@@ -42,7 +46,7 @@
 (defn- try-load-spec [runner file]
   (try
     (load-spec file)
-    (catch #?(:clj Throwable :cljr Exception :cljs :default) e
+    (catch #?(:clj Throwable :cljd Exception :cljr Exception :cljs :default) e
       (running/process-compile-error runner e))))
 
 ;; TODO [BAC]: cljs breaks StandardRunner interface.
@@ -53,6 +57,9 @@
   #?(:cljs
      (run-directories [_this _directories _reporters]
                       (js/alert "StandardRunner.run-directories:  I don't know how to do this."))
+     :cljd
+     (run-directories [_this _directories _reporters]
+                      (throw (Exception. "StandardRunner.run-directories:  I don't know how to do this.")))
      :default
      (run-directories [this directories reporters]
        (let [files (->> (map io/as-file directories)
@@ -122,6 +129,14 @@
          (fn []
            (execute-active-runner)
            (results/fail-count @(.-results (config/active-runner)))))))
+
+   :cljd
+   (defn run-specs [& configurations]
+     (config/with-config
+       (config-with-defaults configurations)
+       (fn []
+         (execute-active-runner)
+         (results/fail-count @(.-results (config/active-runner))))))
 
    :default
    (defn run-specs [& configurations]

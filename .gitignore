@@ -11,3 +11,10 @@ package-lock.json
 pom.xml*
 target
 .lein-repl-history
+
+# ClojureDart
+.dart_tool/
+.cpcache/
+.clojuredart/
+lib
+test/

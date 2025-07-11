@@ -1,9 +1,9 @@
 (ns speclj.reporting
   (:require [clojure.string :as str]
-            #?(:cljs [goog.string]) ;cljs bug?
+            #?(:cljs [goog.string])                         ;cljs bug?
             [speclj.config :refer [*color?* *full-stack-trace?*]]
             [speclj.platform :refer [endl stack-trace cause error-str print-stack-trace elide-level?]]
-            [speclj.results :refer [pass? fail?]]))
+            [speclj.results :as results]))
 
 (defn- sum-by [f coll] (apply + (map f coll)))
 (defn tally-time [results] (sum-by #(.-seconds %) results))
@@ -18,17 +18,19 @@
   (report-runs [this results])
   (report-error [this exception]))
 
-(defmulti report-run (fn [result _reporters] (type result)))
-(defmethod report-run speclj.results.PassResult [result reporters]
+(defn- report-pass-result [result reporters]
   (doseq [reporter reporters]
     (report-pass reporter result)))
-(defmethod report-run speclj.results.FailResult [result reporters]
+
+(defn- report-fail-result [result reporters]
   (doseq [reporter reporters]
     (report-fail reporter result)))
-(defmethod report-run speclj.results.PendingResult [result reporters]
+
+(defn- report-pending-result [result reporters]
   (doseq [reporter reporters]
     (report-pending reporter result)))
-(defmethod report-run speclj.results.ErrorResult [result reporters]
+
+(defn- report-error-result [result reporters]
   (doseq [reporter reporters]
     (report-error reporter result)))
 
@@ -36,6 +38,14 @@
   (if *color?*
     (str "\u001b[" code "m" text "\u001b[0m")
     text))
+
+(defn report-run [result reporters]
+  (cond
+    (results/pass? result) (report-pass-result result reporters)
+    (results/fail? result) (report-fail-result result reporters)
+    (results/pending? result) (report-pending-result result reporters)
+    (results/error? result) (report-error-result result reporters)))
+
 
 (defn red [text] (stylizer "31" text))
 (defn green [text] (stylizer "32" text))

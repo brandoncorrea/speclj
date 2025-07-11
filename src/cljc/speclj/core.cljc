@@ -19,6 +19,7 @@
             [speclj.run.standard]))
 
 #?(:cljs    (do)
+   :cljd    (do)
    :default (try (require 'speclj.run.standard)
                  (catch Exception _)))
 
@@ -28,6 +29,11 @@
   ([message cause] `(if-cljs (js/Error. ~message) (Exception. ~message ~cause))))
 
 #?(:cljr
+   (defmacro ^:no-doc -new-throwable
+     ([] `(if-cljs (js/Object.) (Exception.)))
+     ([message] `(if-cljs (js/Object. ~message) (Exception. ~message))))
+
+   :cljd
    (defmacro ^:no-doc -new-throwable
      ([] `(if-cljs (js/Object.) (Exception.)))
      ([message] `(if-cljs (js/Object. ~message) (Exception. ~message))))
@@ -48,17 +54,25 @@
     `(speclj.components/new-characteristic ~name (fn [] ~@body) ~focused?)
     `(speclj.components/new-characteristic ~name (fn [] (pending)) ~focused?)))
 
-(defmacro ^:no-doc help-describe [name focused? & components]
-  `(let [description# (speclj.components/new-description ~name ~focused? ~(clojure.core/name (speclj.platform/get-name *ns*)))]
+(defmacro ^:no-doc -help-describe [ns-name name focused? & components]
+  `(let [description# (speclj.components/new-description ~name ~focused? ~ns-name)]
      (binding [speclj.config/*parent-description* description#]
        ; MDM - use a vector below - cljs generates a warning because def/declares don't eval immediately
        (doseq [component# (vector ~@components)]
          (speclj.components/install component# description#)))
-     (when-not (if-cljs
-                 speclj.config/*parent-description*
-                 (bound? #'speclj.config/*parent-description*))
+     (when-not (speclj.config/parent-description-bound?)
        (speclj.running/submit-description (speclj.config/active-runner) description#))
      description#))
+
+#?(:cljd
+   (defmacro ^:no-doc help-describe [name focused? & components]
+     `(if (speclj.config/parent-description-bound?)
+        (-help-describe "UNKNOWN-NS" ~name ~focused? ~@components)
+        (def ~(vary-meta (gensym "describe") assoc ::describe true)
+          (-help-describe "UNKNOWN-NS" ~name ~focused? ~@components))))
+   :default
+   (defmacro ^:no-doc help-describe [name focused? & components]
+     `(-help-describe ~(clojure.core/name (speclj.platform/get-name *ns*)) ~name ~focused? ~@components)))
 
 (defmacro ^:no-doc help-should [& body]
   `(do (speclj.components/inc-assertions!)
@@ -84,10 +98,15 @@
   [name & body]
   `(help-it ~name true ~@body))
 
-(defmacro ^:no-doc when-not-bound [name & body]
-  `(if-cljs
-     (when-not ~name ~@body)
-     (when-not (bound? (find-var '~name)) ~@body)))
+#?(:cljd
+   (defmacro ^:no-doc when-not-bound [name & body]
+     `(when-not ~name ~@body))
+
+   :default
+   (defmacro ^:no-doc when-not-bound [name & body]
+     `(if-cljs
+        (when-not ~name ~@body)
+        (when-not (bound? (find-var '~name)) ~@body))))
 
 (defmacro describe
   "body => & spec-components
@@ -177,7 +196,10 @@
   (with meaning 42)
   (it \"knows the meaning of life\" (should= @meaning (the-meaning-of :life)))"
   [name & body]
-  (-make-with name body `speclj.components/new-with false))
+  (let [var-name (with-meta (symbol name) {:dynamic true})]
+    `(do
+       (declare ~var-name)
+       (speclj.components/new-with '~var-name (fn [] ~@body) (fn [v#] (set! ~var-name v#)) false))))
 
 (defmacro with!
   "Declares a reference-able symbol that will be evaluated immediately and reset once per characteristic of the containing
@@ -187,7 +209,10 @@
   (with! my-with! (swap! my-num inc))
   (it \"increments my-num before being accessed\" (should= 1 @my-num) (should= 2 @my-with!))"
   [name & body]
-  (-make-with name body `speclj.components/new-with true))
+  (let [var-name (with-meta (symbol name) {:dynamic true})]
+    `(do
+       (declare ~var-name)
+       (speclj.components/new-with '~var-name (fn [] ~@body) (fn [v#] (set! ~var-name v#)) true))))
 
 (defmacro with-all
   "Declares a reference-able symbol that will be lazily evaluated once per context. The body may contain any forms,
@@ -196,7 +221,10 @@
   (with-all meaning 42)
   (it \"knows the meaning of life\" (should= @meaning (the-meaning-of :life)))"
   [name & body]
-  (-make-with name body `speclj.components/new-with-all false))
+  (let [var-name (with-meta (symbol name) {:dynamic true})]
+    `(do
+       (declare ~var-name)
+       (speclj.components/new-with-all '~var-name (fn [] ~@body) (fn [v#] (set! ~var-name v#)) false))))
 
 (defmacro with-all!
   "Declares a reference-able symbol that will be immediately evaluated once per context. The body may contain any forms,
@@ -211,7 +239,10 @@
     (should= 1 @my-num)
     (should= 2 @my-with!))"
   [name & body]
-  (-make-with name body `speclj.components/new-with-all true))
+  (let [var-name (with-meta (symbol name) {:dynamic true})]
+    `(do
+       (declare ~var-name)
+       (speclj.components/new-with-all '~var-name (fn [] ~@body) (fn [v#] (set! ~var-name v#)) true))))
 
 (defmacro ^:no-doc -to-s [thing]
   `(if-some [thing# ~thing] (pr-str thing#) "nil"))
@@ -224,8 +255,8 @@
 (defmacro ^:no-doc wrong-types [assertion a b]
   `(let [a#      ~a
          b#      ~b
-         type-a# (if (nil? a#) "nil" (speclj.platform/type-name (type a#)))
-         type-b# (if (nil? b#) "nil" (speclj.platform/type-name (type b#)))]
+         type-a# (if (nil? a#) "nil" (speclj.platform/type-name (#?(:cljd .-runtimeType :default type) a#)))
+         type-b# (if (nil? b#) "nil" (speclj.platform/type-name (#?(:cljd .-runtimeType :default type) b#)))]
      (str ~assertion " doesn't know how to handle these types: [" type-a# " " type-b# "]")))
 
 (defmacro should
@@ -337,7 +368,7 @@
      (let [expected# ~expected
            actual#   ~actual]
        (cond
-         (nil? actual#) nil ; automatic pass!
+         (nil? actual#) nil                                 ; automatic pass!
          (and (string? expected#) (string? actual#))
          (when (some? (clojure.string/index-of actual# expected#))
            (-fail (str "Expected: " (-to-s expected#) speclj.platform/endl "not to be in: " (-to-s actual#) " (using .contains)")))
@@ -602,12 +633,12 @@ There are three options for passing different kinds of predicates:
   ([throwable-type predicate form]
    `(let [e# (should-throw ~throwable-type ~form)]
       (try-catch-anything
-        (let [predicate# ~predicate]
+        (let [predicate# (identity ~predicate)]
           (cond (speclj.platform/re? predicate#)
                 (should-not-be-nil (re-find predicate# (speclj.platform/error-message e#)))
 
                 (ifn? predicate#)
-                (should= true (predicate# e#))
+                (should-be predicate# e#)
 
                 :else
                 (should= predicate# (speclj.platform/error-message e#))))
@@ -629,7 +660,7 @@ There are three options for passing different kinds of predicates:
   [expected-type actual-form]
   `(help-should
      (let [actual#        ~actual-form
-           actual-type#   (type actual#)
+           actual-type#   (#?(:cljd .-runtimeType :default type) actual#)
            expected-type# ~expected-type]
        (when-not (isa? actual-type# expected-type#)
          (-fail (str "Expected " (-to-s actual#) " to be an instance of: " (-to-s expected-type#) speclj.platform/endl "           but was an instance of: " (-to-s actual-type#) " (using isa?)"))))))
@@ -639,7 +670,7 @@ There are three options for passing different kinds of predicates:
   [expected-type actual-form]
   `(help-should
      (let [actual#        ~actual-form
-           actual-type#   (type actual#)
+           actual-type#   (#?(:cljd .-runtimeType :default type) actual#)
            expected-type# ~expected-type]
        (when (isa? actual-type# expected-type#)
          (-fail (str "Expected " (-to-s actual#) " not to be an instance of " (-to-s expected-type#) " but was (using isa?)"))))))
@@ -791,11 +822,16 @@ There are three options for passing different kinds of predicates:
 
 (def ^:dynamic ^:no-doc *bound-by-should-invoke* false)
 
-(defmacro ^:no-doc bound-by-should-invoke? []
-  `(if-cljs
-     *bound-by-should-invoke*
-     (and (bound? #'*bound-by-should-invoke*)
-          *bound-by-should-invoke*)))
+#?(:cljd
+   (defmacro ^:no-doc bound-by-should-invoke? []
+     `*bound-by-should-invoke*)
+
+   :default
+   (defmacro ^:no-doc bound-by-should-invoke? []
+     `(if-cljs
+        *bound-by-should-invoke*
+        (and (bound? #'*bound-by-should-invoke*)
+             *bound-by-should-invoke*))))
 
 (defmacro ^:no-doc with-stubbed-invocations [& body]
   `(if (speclj.platform/bound-by-should-invoke?)
@@ -873,7 +909,32 @@ There are three options for passing different kinds of predicates:
          (when-not (>= a# b#) (-fail (str "expected " a# " to be greater than or equal to " b# " but got: (>= " a# " " b# ")")))
          (throw (-new-exception (wrong-types "should>=" a# b#)))))))
 
-(defmacro run-specs []
+#?(:cljd
+   (defmacro run-specs []
+     (let [{:keys [current-ns] :as nses} (:nses &env)
+           the-ns      (nses current-ns)
+           descriptions (keep (fn [[k v]] (when (and (symbol? k) (::describe (:meta v))) (list k))) the-ns)]
+       `(defn main []
+          (println "run-specs!!!!!!")
+          (binding [speclj.config/*runner*     (speclj.run.standard/new-standard-runner)
+                    speclj.config/*reporters*  [(speclj.report.documentation/new-documentation-reporter)]
+                    speclj.config/*specs*      true
+                    speclj.config/*color?*     true
+                    ;config/*omit-pending?*     (:omit-pending config)
+                    ;config/*full-stack-trace?* (some? (:stacktrace config))
+                    ;config/*tag-filter*        (config/parse-tags (:tags config))
+                    ]
+            ;(try
+            ;  (when-let [filter-msg (describe-filter)]
+            ;    (report-message* config/*reporters* filter-msg))
+            ;  (run-directories config/*runner* config/*specs* config/*reporters*)
+            ;  (catch Exception e
+            ;    (print-stack-trace e)
+            ;    (println (stack-trace-str e))
+            ;    -1))
+            (let [blah# [~@descriptions]])))))
+   :default
+   (defmacro run-specs []
   "If evaluated outside the context of a spec run, it will run all the specs that have been evaluated using the default
 runner and reporter.  A call to this function is typically placed at the end of a spec file so that all the specs
 are evaluated by evaluation the file as a script.  Optional configuration parameters may be passed in:
@@ -882,5 +943,5 @@ are evaluated by evaluation the file as a script.  Optional configuration parame
   `(if-cljs
      (comment "Ignoring run-specs for clojurescript")
      (do
-       (require '[speclj.cli]) ; require all speclj files
-       (speclj.run.standard/run-specs))))
+       (require '[speclj.cli])                              ; require all speclj files
+       (speclj.run.standard/run-specs)))))
