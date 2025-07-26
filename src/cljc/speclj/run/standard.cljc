@@ -1,5 +1,6 @@
 (ns speclj.run.standard
-  (:require #?@(:cljs    [[speclj.report.progress]
+  (:require #?@(:cljd    []
+                :cljs    [[speclj.report.progress]
                           [speclj.components :as components]]
                 :default [[speclj.freshener :as fresh]
                           [speclj.io :as io]])
@@ -72,6 +73,10 @@
        (results/fail-count @results))
      )
 
+  (run-results [_this] @results)
+
+  (submit-result [_this result] (swap! results conj result))
+
   (-get-descriptions [_this] @descriptions)
 
   (submit-description [_this description]
@@ -128,7 +133,7 @@
          (config-with-defaults configurations)
          (fn []
            (execute-active-runner)
-           (results/fail-count @(.-results (config/active-runner)))))))
+           (results/fail-count (running/run-results (config/active-runner)))))))
 
    :cljd
    (defn run-specs [& configurations]
@@ -136,7 +141,7 @@
        (config-with-defaults configurations)
        (fn []
          (execute-active-runner)
-         (results/fail-count @(.-results (config/active-runner))))))
+         (results/fail-count (running/run-results (config/active-runner))))))
 
    :default
    (defn run-specs [& configurations]

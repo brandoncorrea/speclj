@@ -25,13 +25,12 @@
     (.-stack e) (str/trim (nth (str/split-lines (.-stack e)) (count (str/split-lines (.-message e)))))
     :else "unkown-file:?"))
 
-(defn error-message [e] (.-message e))
 (defn error-str [e] (str e))
 (defn stack-trace [e] (rest (str/split-lines (or (.-stack e) (.toString e)))))
-(defn cause [e] (.-cause e))
 (defn print-stack-trace [e] (println (or (.-stack e) "missing stack trace")))
 (defn elide-level? [_stack-element] false)
 
+(defn type-of [obj] (type obj))
 (defn type-name [t] (if t (.-name t) "nil"))
 
 (defn format-seconds [secs] (.toFixed secs 5))

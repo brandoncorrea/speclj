@@ -87,6 +87,10 @@
 
 (deftype VigilantRunner [file-listing results previous-failed directories descriptions]
   running/Runner
+  (run-results [_this] @results)
+
+  (submit-result [_this result] (swap! results conj result))
+
   (run-directories [this dirs _reporters]
     (-run-directories this dirs))
 

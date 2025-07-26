@@ -20,6 +20,7 @@
   (> (abs (- (bigdec expected) (bigdec actual)))
      (abs (bigdec delta))))
 
+(defn type-of [obj] (type obj))
 (defn type-name [t]
   (if (instance? sci.lang.Type t)
     (str t)
@@ -56,7 +57,6 @@
 
 (defn print-stack-trace [e] (.printStackTrace e (java.io.PrintWriter. *out* true)))
 (defn stack-trace [e] (seq (.getStackTrace e)))
-(defn cause [e] (.getCause e))
 (defn error-str [e] (str e))
 
 (def elide-prefixes
@@ -77,7 +77,6 @@
 (defn current-millis [] (System/currentTimeMillis))
 (defn secs-since [start] (/ (double (- (System/nanoTime) start)) 1000000000.0))
 
-(defn error-message [e] (.getMessage e))
 
 (declare ^:dynamic *bound-by-should-invoke*)
 

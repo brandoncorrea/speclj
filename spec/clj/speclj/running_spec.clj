@@ -1,12 +1,14 @@
 (ns speclj.running-spec
-  (:require [speclj.config :refer [*reporters* *runner* *tag-filter*]]
+  (:require [speclj.components :as components]
+            [speclj.config :refer [*reporters* *runner* *tag-filter*]]
             [speclj.core :refer [after around before-all context describe
                                  it should should-fail should-not
-                                 should-not-throw should-not= should= tags
+                                 should-not= should= tags
                                  with with-all]]
             [speclj.error :as error]
             [speclj.platform :as platform]
             [speclj.report.silent :refer [new-silent-reporter]]
+            [speclj.results :as results]
             [speclj.results :refer [fail?]]
             [speclj.run.standard :as standard]
             [speclj.running :as sut]
@@ -28,10 +30,10 @@
          (it "has a pass"
            (should (= 1 1)))))
     (sut/run-and-report *runner* *reporters*)
-    (let [results @(.-results *runner*)
+    (let [results (sut/run-results *runner*)
           result  (first results)]
       (should= 1 (count results))
-      (should= "has a pass" (.-name (.-characteristic result)))
+      (should= "has a pass" (components/name-of (results/characteristic result)))
       (should-not (fail? result))))
 
   (it "tracks one fail"
@@ -40,12 +42,12 @@
          (it "has a fail"
            (should= 1 2))))
     (sut/run-and-report *runner* *reporters*)
-    (let [results @(.-results *runner*)
+    (let [results (sut/run-results *runner*)
           result  (first results)]
       (should= 1 (count results))
-      (should= "has a fail" (.-name (.-characteristic result)))
-      (should-not= nil (.-failure result))
-      (should (error/failure? (.-failure result)))))
+      (should= "has a fail" (components/name-of (results/characteristic result)))
+      (should-not= nil (results/failure result))
+      (should (error/failure? (results/failure result)))))
 
   (it "runs afters with failures"
     (eval
@@ -70,18 +72,18 @@
   (it "only executes contexts that pass the tag filter"
     (eval
       `(describe "Dummy" (tags :one)
-                         (it "one tag" :filler)
-                         (context "Fool" (tags :two)
-                           (it "one, two tag" :filler))))
+         (it "one tag" :filler)
+         (context "Fool" (tags :two)
+           (it "one, two tag" :filler))))
     (binding [*tag-filter* {:includes #{:one :two} :excludes #{}}]
       (sut/run-and-report *runner* *reporters*))
-    (let [results @(.-results *runner*)]
+    (let [results (sut/run-results *runner*)]
       (should= 1 (count results))
-      (should= "one, two tag" (.-name (.-characteristic (first results))))))
+      (should= "one, two tag" (components/name-of (results/characteristic (first results))))))
 
   (context "with named the same as a pre-existing var"
     (with bauble "foo")
-    
+
     (it "doesn't crash"
       (should= "foo" @bauble))
     )
@@ -90,7 +92,7 @@
     (with-all foo (atom 42))
     (before-all (swap! @foo inc))
     (it "performs before-all using a with-all"
-        (should= 43 @@foo)))
+      (should= 43 @@foo)))
 
   (context "exporting"
     (spec-helper/test-exported-meta sut/filter-descriptions)

@@ -674,10 +674,10 @@
                (failure-message (should-throw exception "My message" (throw (-new-exception "Not my message"))))))
 
     (it "can test an exception by calling a passed function"
-      (should-pass! (should-throw exception #(empty? (speclj.platform/error-message %)) (throw (-new-exception ""))))
-      (should-fail! (should-throw exception #((not (empty? (speclj.platform/error-message %))) (throw (-new-exception "")))))
+      (should-pass! (should-throw exception #(empty? (ex-message %)) (throw (-new-exception ""))))
+      (should-fail! (should-throw exception #((not (empty? (ex-message %))) (throw (-new-exception "")))))
       (should= (str "Expected exception predicate didn't match" endl "Expected: true" endl "     got: \"Not my message\" (using =)")
-               (failure-message (should-throw exception #(speclj.platform/error-message %) (throw (-new-exception "Not my message"))))))
+               (failure-message (should-throw exception #(ex-message %) (throw (-new-exception "Not my message"))))))
 
     (it "bumps assertions once for form"
       (should-throw (throw (ex-info "" {})))

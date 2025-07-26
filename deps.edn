@@ -14,7 +14,7 @@
                                    leiningen-core/leiningen-core {:mvn/version "2.9.8"}
                                    tensegritics/clojuredart      {:git/url "https://github.com/tensegritics/ClojureDart.git" :sha "a32cb8677fcef987fb38f34f35ab6121dceba9d6"}
                                    }
-                     :extra-paths ["dev" "spec/clj" "spec/cljc" "spec/cljs" "spec/cljvm" "spec/bb" "target/classes"]}
+                     :extra-paths ["dev" "spec/clj" "spec/cljc" "spec/cljs" "spec/cljvm" "spec/bb" "spec/cljd" "target/classes"]}
              :spec  {:main-opts ["-m" "speclj.main" "-c"]}
              :cljd  {:main-opts ["-m" "cljd.build"]}
              :cljs  {:main-opts ["-m" "speclj.dev.cljs"]}

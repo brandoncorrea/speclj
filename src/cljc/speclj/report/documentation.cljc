@@ -1,19 +1,22 @@
 (ns speclj.report.documentation
-  (:require [speclj.config :as config]
+  (:require [speclj.components :as components]
+            [speclj.config :as config]
             [speclj.platform :as platform]
             [speclj.report.progress :as progress]
-            [speclj.reporting :refer [green indent red yellow]]))
+            [speclj.reporting :as reporting]
+            [speclj.results :as results]))
 
 (defn level-of [component]
-  (loop [component @(.-parent component) level 0]
-    (if component
-      (recur @(.-parent component) (inc level))
+  (loop [description (components/parent component)
+         level       0]
+    (if description
+      (recur (components/parent description) (inc level))
       level)))
 
 (defn maybe-focused [text component]
   (cond-> text
-          @(.-is-focused? component)
-          (str " " (yellow "[FOCUS]"))))
+          (components/focused? component)
+          (str " " (reporting/yellow "[FOCUS]"))))
 
 (defn- maybe-profile
   ([text]
@@ -23,10 +26,10 @@
   ([text result]
    (cond->> text
             config/*profile?*
-            (str (yellow (str "[" (platform/format-seconds (.-seconds result)) "s] "))))))
+            (str (reporting/yellow (str "[" (platform/format-seconds (results/seconds result)) "s] "))))))
 
 (deftype DocumentationReporter []
-  speclj.reporting/Reporter
+  reporting/Reporter
 
   (report-message [_this message]
     (println message)
@@ -35,40 +38,43 @@
   (report-description [_this description]
     (let [level (level-of description)]
       (when (zero? level) (println))
-      (let [output (-> (str (indent level (.-name description)))
+      (let [output (-> (reporting/indent level (components/name-of description))
                        (maybe-focused description)
                        maybe-profile)]
         (println output)
         (platform/flush))))
 
   (report-pass [_this result]
-    (let [characteristic (.-characteristic result)
+    (let [characteristic (results/characteristic result)
           level          (level-of characteristic)
-          output         (-> (green (indent (dec level) "- " (.-name characteristic)))
+          output         (-> (reporting/indent (dec level) "- " (components/name-of characteristic))
+                             reporting/green
                              (maybe-focused characteristic)
                              (maybe-profile result))]
       (println output)
       (platform/flush)))
 
   (report-pending [_this result]
-    (let [characteristic (.-characteristic result)
+    (let [characteristic (results/characteristic result)
           level          (level-of characteristic)
-          output         (-> (yellow (indent (dec level) "- " (.-name characteristic) " (PENDING: " (platform/error-message (.-exception result)) ")"))
+          output         (-> (reporting/indent (dec level) "- " (components/name-of characteristic) " (PENDING: " (ex-message (results/exception result)) ")")
+                             reporting/yellow
                              (maybe-profile result))]
       (println output)
       (platform/flush)))
 
   (report-fail [_this result]
-    (let [characteristic (.-characteristic result)
+    (let [characteristic (results/characteristic result)
           level          (level-of characteristic)
-          output         (-> (red (indent (dec level) "- " (.-name characteristic) " (FAILED)"))
+          output         (-> (reporting/indent (dec level) "- " (components/name-of characteristic) " (FAILED)")
+                             reporting/red
                              (maybe-focused characteristic)
                              (maybe-profile result))]
       (println output)
       (platform/flush)))
 
   (report-error [_this result]
-    (println (red (#?(:cljr .ToString :default .toString) (.-exception result)))))
+    (println (reporting/red (#?(:cljr .ToString :default .toString) (results/exception result)))))
 
   (report-runs [_this results]
     (progress/print-summary results)))

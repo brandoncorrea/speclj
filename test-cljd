@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -e
+
+clojure -M:test -m cljd.build compile \
+  speclj.args-spec
+
+dart lib/cljd-out/speclj/args-spec.dart

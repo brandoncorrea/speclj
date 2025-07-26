@@ -1,0 +1,32 @@
+(ns speclj.run-specs
+  (:require [speclj.args-spec]
+            [speclj.cli-spec]
+            [speclj.config-spec]
+            [speclj.core-spec]
+            [speclj.platform-spec]
+            [speclj.report.documentation-spec]
+            [speclj.report.progress-spec]
+            [speclj.reporting-spec]
+            ))
+
+(defmacro load-specs []
+  (let [{:keys [current-ns] :as nses} (:nses &env)
+        _            (prn (keys nses))
+        the-ns       (nses current-ns)
+        descriptions (keep (fn [[k v]] (when (and (symbol? k)
+                                                  (::describe (:meta v))
+                                                  (:dart/code v))
+                                         k)) the-ns)]
+    `(doall (list ~@descriptions))))
+
+(defn main []
+  (binding [speclj.config/*runner*    (speclj.run.standard/new-standard-runner)
+            speclj.config/*reporters* [(speclj.report.documentation/new-documentation-reporter)]
+            speclj.config/*specs*     true
+            speclj.config/*color?*    true
+            ;config/*omit-pending?*     (:omit-pending config)
+            ;config/*full-stack-trace?* (some? (:stacktrace config))
+            ;config/*tag-filter*        (config/parse-tags (:tags config))
+            ]
+    (load-specs)
+    (speclj.running/run-and-report speclj.config/*runner* speclj.config/*reporters*)))

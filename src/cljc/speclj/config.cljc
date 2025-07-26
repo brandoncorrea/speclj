@@ -9,10 +9,17 @@
 (def default-reporters (atom nil))
 
 (defn parent-description-bound? []
-  #?(:cljs *parent-description* :cljd *parent-description* :default (bound? #'*parent-description*)))
+  #?(:cljs    *parent-description*
+     :cljd    *parent-description*
+     :default (bound? #'*parent-description*)))
+
+(defn reporters-bound? []
+  #?(:cljs    *reporters*
+     :cljd    *reporters*
+     :default (bound? #'*reporters*)))
 
 (defn active-reporters []
-  (if #?(:cljs *reporters* :cljd *reporters* :default (bound? #'*reporters*))
+  (if (reporters-bound?)
     *reporters*
     (if-let [reporters @default-reporters]
       reporters
@@ -22,8 +29,13 @@
 (def default-runner (atom nil))
 (def default-runner-fn (atom nil))
 
+(defn runner-bound? []
+  #?(:cljs    *runner*
+     :cljd    *runner*
+     :default (bound? #'*runner*)))
+
 (defn ^:export active-runner []
-  (if #?(:cljs *runner* :cljd *runner* :default (bound? #'*runner*))
+  (if (runner-bound?)
     *runner*
     (if-let [runner @default-runner]
       runner

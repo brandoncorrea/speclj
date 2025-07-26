@@ -23,6 +23,8 @@
 
 (describe "Clojure Args"
 
+  (context "Argument Parsing"
+
     (it "parses nothing"
       (let [spec (sut/create-args)]
         (should-be empty? (sut/parse spec []))))
@@ -87,9 +89,9 @@
 
     (it "option names are required"
       (let [spec (sut/create-args)]
-        (should-throw #?(:clj RuntimeException :cljs js/Error :cljr SystemException :cljd Exception) "Options require a shortName and fullName"
+        (should-throw #?(:clj RuntimeException :cljs js/Error :cljr SystemException :cljd Exception) #"Options require a shortName and fullName"
                       (sut/add-switch-option spec "a" nil nil))
-        (should-throw #?(:clj RuntimeException :cljs js/Error :cljr SystemException :cljd Exception) "Options require a shortName and fullName"
+        (should-throw #?(:clj RuntimeException :cljs js/Error :cljr SystemException :cljd Exception) #"Options require a shortName and fullName"
                       (sut/add-switch-option spec nil "a-option" nil))
         (should-not-throw (sut/add-switch-option spec "a" "a-option" nil))))
 
@@ -193,7 +195,7 @@
         (should= {:color ["red"]} (sut/parse spec ["-c" "red"]))
         (should= {:color ["red" "orange" "yellow"]} (sut/parse spec ["-c" "red" "--color" "orange" "--color=yellow"]))))
 
-    #_(context "arg-string"
+    (context "arg-string"
 
       (it "empty"
         (should= "" (sut/arg-string (sut/create-args))))
@@ -239,7 +241,7 @@
           (should= "[param]" (sut/arg-string spec))))
       )
 
-    #_(context "parameters-string"
+    (context "parameters-string"
 
       (it "empty"
         (should= "" (sut/parameters-string (sut/create-args))))
@@ -259,7 +261,7 @@
           "  fizz  Fizz Param"))
       )
 
-    #_(context "option-string"
+    (context "option-string"
 
       (it "empty"
         (should= "" (sut/options-string (sut/create-args))))
@@ -342,6 +344,7 @@
           "                          "
           "                          That's it"))
       )
+    )
   )
 
 (run-specs)

@@ -47,9 +47,9 @@
 (defn invocations-of
   "Returns a list of argument lists representing each invocation of the specified stub."
   [name]
-  (map second
-       (filter #(= name (first %))
-               @*stubbed-invocations*)))
+  (->> @*stubbed-invocations*
+       (filter #(= name (first %)))
+       (map second)))
 
 (defn first-invocation-of
   "Returns the list of arguments passed into the first invocation of the specified stub, nil if it was never invoked."
@@ -69,8 +69,7 @@
     (every? true?
             (map
               (fn [e a]
-                (cond
-                  (= :* e) true
-                  (fn? e) (or (= e a) (e a))
-                  :else (= e a)))
+                (or (= :* e)
+                    (= e a)
+                    (and (fn? e) (e a))))
               expected actual))))

@@ -1,8 +1,8 @@
 (ns speclj.report.silent
-  (:require [speclj.reporting]))
+  (:require [speclj.reporting :as reporting]))
 
 (deftype SilentReporter [passes fails results]
-  speclj.reporting/Reporter
+  reporting/Reporter
   (report-message [_this _message])
   (report-description [_this _description])
   (report-pass [_this _result])

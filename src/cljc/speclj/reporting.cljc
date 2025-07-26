@@ -1,13 +1,13 @@
 (ns speclj.reporting
   (:require [clojure.string :as str]
             #?(:cljs [goog.string])                         ;cljs bug?
-            [speclj.config :refer [*color?* *full-stack-trace?*]]
-            [speclj.platform :refer [endl stack-trace cause error-str print-stack-trace elide-level?]]
+            [speclj.config :as config]
+            [speclj.platform :as platform]
             [speclj.results :as results]))
 
 (defn- sum-by [f coll] (apply + (map f coll)))
-(defn tally-time [results] (sum-by #(.-seconds %) results))
-(defn tally-assertions [results] (sum-by #(.-assertions %) results))
+(defn tally-time [results] (sum-by results/seconds results))
+(defn tally-assertions [results] (sum-by results/assertions results))
 
 (defprotocol Reporter
   (report-message [reporter message])
@@ -35,7 +35,7 @@
     (report-error reporter result)))
 
 (defn- stylizer [code text]
-  (if *color?*
+  (if config/*color?*
     (str "\u001b[" code "m" text "\u001b[0m")
     text))
 
@@ -45,7 +45,6 @@
     (results/fail? result) (report-fail-result result reporters)
     (results/pending? result) (report-pending-result result reporters)
     (results/error? result) (report-error-result result reporters)))
-
 
 (defn red [text] (stylizer "31" text))
 (defn green [text] (stylizer "32" text))
@@ -59,36 +58,36 @@
 (declare print-exception)
 
 (defn- print-stack-levels [exception]
-  (loop [levels (stack-trace exception) elides 0]
+  (loop [levels (platform/stack-trace exception) elides 0]
     (if (seq levels)
       (let [level (first levels)]
-        (if (elide-level? level)
+        (if (platform/elide-level? level)
           (recur (rest levels) (inc elides))
           (do
             (print-elides elides)
             (println "\tat" (str level))
             (recur (rest levels) 0))))
       (print-elides elides)))
-  (when-let [cause (cause exception)]
+  (when-let [cause (ex-cause exception)]
     (print-exception "Caused by:" cause)))
 
 (defn- print-exception [prefix exception]
   (if prefix
-    (println prefix (error-str exception))
-    (println (error-str exception)))
+    (println prefix (platform/error-str exception))
+    (println (platform/error-str exception)))
   (print-stack-levels exception))
 
 (defn stack-trace-str [exception]
   (with-out-str
-    (if *full-stack-trace?*
-      (print-stack-trace exception)
+    (if config/*full-stack-trace?*
+      (platform/print-stack-trace exception)
       (print-exception nil exception))))
 
 (defn prefix [pre & args]
   (let [value          (apply str args)
         lines          (str/split value #"[\r\n]+")
         prefixed-lines (map #(str pre %) lines)]
-    (str/join endl prefixed-lines)))
+    (str/join platform/endl prefixed-lines)))
 
 (defn indent [n & args]
   (let [spaces    (int (* n 2.0))
@@ -106,7 +105,3 @@
 (defn report-message* [reporters message]
   (doseq [reporter reporters]
     (report-message reporter message)))
-
-(defn report-error* [reporters exception]
-  (doseq [reporter reporters]
-    (report-error reporter exception)))

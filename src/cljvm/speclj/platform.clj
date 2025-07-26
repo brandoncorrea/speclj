@@ -54,10 +54,8 @@
   (> (abs (- (bigdec expected) (bigdec actual)))
      (abs (bigdec delta))))
 
-(defn error-message [e] (.getMessage e))
 (defn error-str [e] (str e))
 (defn stack-trace [e] (seq (.getStackTrace e)))
-(defn cause [e] (.getCause e))
 (defn print-stack-trace [e]
   (.printStackTrace e (java.io.PrintWriter. *out* true)))
 
@@ -81,6 +79,7 @@
       (.startsWith classname "speclj.")
       (.startsWith classname "java."))))
 
+(defn type-of [obj] (type obj))
 (defn type-name [t] (.getName t))
 
 (defn current-date [] (java.util.Date.))

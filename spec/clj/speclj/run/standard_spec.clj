@@ -1,8 +1,10 @@
 (ns speclj.run.standard-spec
-  (:require [speclj.config :as config]
+  (:require [speclj.components :as components]
+            [speclj.config :as config]
             [speclj.core :refer :all]
             [speclj.io :as io]
             [speclj.report.silent :as silent]
+            [speclj.results :as results]
             [speclj.run.standard :as sut]
             [speclj.running :as running]
             [speclj.spec-helper :as spec-helper]))
@@ -35,9 +37,9 @@
   (it "limits execution to focused components"
     (running/run-directories @runner [focus-dir] @reporters)
     (should= ["yes-1" "yes-2" "yes-3" "yes-4" "yes-5" "yes-6"]
-             (->> @(.-results @runner)
-                  (map #(.-characteristic %))
-                  (map #(.-name %)))))
+             (->> (running/run-results @runner)
+                  (map results/characteristic)
+                  (map components/name-of))))
 
   (it "config with defaults"
     (let [defaults (dissoc config/default-config :runner)]

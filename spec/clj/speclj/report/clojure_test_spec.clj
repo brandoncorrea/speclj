@@ -1,5 +1,5 @@
 (ns speclj.report.clojure-test-spec
-  (:require ;cljs-macros
+  (:require                                                 ;cljs-macros
     [clojure.string :as str]
     [clojure.test]
     ;cljs-include [goog.string] ;cljs bug?
@@ -9,6 +9,7 @@
     [speclj.platform :as platform]
     [speclj.report.clojure-test :refer [new-clojure-test-reporter]]
     [speclj.reporting :refer [report-error report-fail report-pass report-pending report-runs]]
+    [speclj.results :as results]
     [speclj.results :refer [error-result fail-result]]
     [speclj.run.standard :as standard]))
 
@@ -19,7 +20,7 @@
        (str s#))))
 
 (defn error-type-name [error]
-  (platform/type-name (type (.exception error))))
+  (platform/type-name (type (results/exception error))))
 
 (describe "Clojure Test Reporter"
   (with reporter (new-clojure-test-reporter))

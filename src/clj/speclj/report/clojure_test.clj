@@ -1,13 +1,16 @@
 (ns speclj.report.clojure-test
   (:require [clojure.string]
             [clojure.test]
+            [speclj.components :as components]
             [speclj.platform :as platform]
-            [speclj.reporting]))
+            [speclj.reporting]
+            [speclj.results :as results]))
 
 (defn full-name [characteristic]
-  (loop [context @(.-parent characteristic) name (.-name characteristic)]
+  (loop [context (components/parent characteristic)
+         name    (components/name-of characteristic)]
     (if context
-      (recur @(.-parent context) (str (.-name context) " " name))
+      (recur (components/parent context) (str (components/name-of context) " " name))
       name)))
 
 (deftype ClojureTestReporter [report-counters]
@@ -30,27 +33,27 @@
   (report-fail [_this result]
     (binding [clojure.test/*report-counters* report-counters]
       (clojure.test/inc-report-counter :test)
-      (let [characteristic      (.-characteristic result)
-            failure             (.-failure result)
+      (let [characteristic      (results/characteristic result)
+            failure             (results/failure result)
             characteristic-text (full-name characteristic)]
         (binding [clojure.test/*testing-vars* [(with-meta {} {:name (symbol characteristic-text)})]]
           (clojure.test/report
             (merge
               {:type :fail}
               (platform/failure-source failure)
-              {:message  (platform/error-message failure)
+              {:message  (ex-message failure)
                :expected "see above"
                :actual   "see above"}))))))
 
   (report-error [_this result]
     (binding [clojure.test/*report-counters* report-counters]
-      (let [ex (.-exception result)]
+      (let [ex (results/exception result)]
         (binding [clojure.test/*testing-vars* [(with-meta {} {:name (symbol "unknown")})]]
           (clojure.test/report
             (merge
               {:type :error}
               (platform/failure-source ex)
-              {:message  (platform/error-message ex)
+              {:message  (ex-message ex)
                :expected "not recorded"
                :actual   ex}))))))
 

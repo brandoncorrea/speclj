@@ -13,7 +13,7 @@
 (defmacro should-pass! [& body]
   `(let [result# (run-result ~@body)]
      (when-not (= :pass result#)
-       (-fail (str "Unexpected failure: " (speclj.platform/error-message result#))))))
+       (-fail (str "Unexpected failure: " (ex-message result#))))))
 
 (defmacro should-have-assertions [n]
   `(let [assertions# @components/*assertions*]
@@ -31,7 +31,7 @@
   `(let [result# (run-result ~@body)]
      (cond
        (= :pass result#) (-fail (str "Unexpected pass: " '~body))
-       (speclj.error/failure? result#) (-fail (str "Unexpected failure: " (speclj.platform/error-message result#))))))
+       (speclj.error/failure? result#) (-fail (str "Unexpected failure: " (ex-message result#))))))
 
 (defmacro test-exported-meta [sym]
   `(it '~sym
@@ -42,7 +42,7 @@
 (defmacro failure-message [& body]
   `(let [result# (run-result ~@body)]
      (if (speclj.error/failure? result#)
-       (speclj.platform/error-message result#)
+       (ex-message result#)
        (-fail (str "Expected a failure but got: " result#)))))
 
 (defn test-description-filtering [new-runner-fn]

@@ -57,12 +57,11 @@
            (should= [#{:one}] (sut/tag-sets-for spec))))
 
        (it "finds all the tag sets with nested contexts"
-         (let [spec
-                        (eval '(describe "foo" (tags :one)
-                                               (context "child" (tags :two)
-                                                 (context "grandchild" (tags :three :four))
-                                                 (context "grandchild2" (tags :five)))
-                                               (context "child2" (tags :six))))
+         (let [spec     (eval '(describe "foo" (tags :one)
+                                 (context "child" (tags :two)
+                                   (context "grandchild" (tags :three :four))
+                                   (context "grandchild2" (tags :five)))
+                                 (context "child2" (tags :six))))
                tag-sets (sut/tag-sets-for spec)]
            (should= 5 (count tag-sets))
            (should= #{:one} (nth tag-sets 0))
