@@ -61,10 +61,13 @@
        description#)))
 
 (defmacro ^:no-doc help-describe [name focused? & components]
-  (let [sym (vary-meta (gensym "describe") {::describe true})]
+  (let [sym (with-meta (gensym "describe") {::describe true})]
     `(if (speclj.config/parent-description-bound?)
        (-help-describe ~name ~focused? ~@components)
+       ; In order to force side effects in ClojureDart,
+       ; we must run the side effect in a def and reference them later.
        (do (def ~sym (-help-describe ~name ~focused? ~@components))
+           ; Parent nodes must still know about child describes/contexts
            ~sym))))
 
 (defmacro ^:no-doc help-should [& body]
@@ -169,7 +172,7 @@
 (defmacro ^:no-doc -make-with [name body ctor bang?]
   (let [var-name (with-meta (symbol name) {:dynamic true})]
     `(do
-       (declare ~var-name)
+       (def ^:mutable ~var-name)
        (~ctor
          '~var-name
          (fn [] ~@body)

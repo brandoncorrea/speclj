@@ -1,10 +1,10 @@
 (ns speclj.cli-spec
   (:require [speclj.cli :as sut]
             [speclj.config :as config]
-            [speclj.core #?(:cljs :refer-macros :default :refer) [describe it should= should-contain should-not-be-nil]]
+            [speclj.core #?(:cljs :refer-macros :default :refer) [describe it should= should-contain should-not-be-nil run-specs]]
             [speclj.platform :refer [endl]]
             [clojure.string :as str]
-            #?(:clj [trptcolin.versioneer.core :as version])))
+            #?@(:cljd () :clj ([trptcolin.versioneer.core :as version]))))
 
 (describe "speclj.cli"
 
@@ -110,7 +110,7 @@
 
   (it "builds var mappings from config"
     (config/with-config {:runner "standard" :reporter "progress" :color true}
-      #(should= true config/*color?*)))
+                        #(should= true config/*color?*)))
 
   (it "parses the --stacktrace switch"
     (should= nil (:stacktrace (sut/parse-args "")))
@@ -119,9 +119,9 @@
 
   (it "set stacktrace in config"
     (config/with-config {:runner "standard" :reporter "progress"}
-      #(should= false config/*full-stack-trace?*))
+                        #(should= false config/*full-stack-trace?*))
     (config/with-config {:runner "standard" :reporter "progress" :stacktrace true}
-      #(should= true config/*full-stack-trace?*)))
+                        #(should= true config/*full-stack-trace?*)))
 
   (it "resolves reporter aliases"
     (should= ["silent"] (:reporters (sut/parse-args "-f" "s")))
@@ -139,3 +139,5 @@
     (should= ["one" "~two"] (:tags (sut/parse-args "--tag=one" "--tag=~two")))
     (should= ["one" "~two"] (:tags (sut/parse-args "-t" "one" "-t" "~two"))))
   )
+
+(run-specs)

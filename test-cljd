@@ -3,6 +3,10 @@
 set -e
 
 clojure -M:test -m cljd.build compile \
-  speclj.args-spec
+  speclj.args-spec \
+  speclj.cli-spec \
+  speclj.config-spec
 
 dart lib/cljd-out/speclj/args-spec.dart
+dart lib/cljd-out/speclj/cli-spec.dart
+dart lib/cljd-out/speclj/config-spec.dart

@@ -10,29 +10,34 @@
 (describe "Config"
   (it "dynamically loads StandardRunner"
     (let [runner (sut/load-runner "standard")]
-      (should-not= nil runner)
-      (should= speclj.run.standard.StandardRunner (type runner))))
+      (should-not-be-nil runner)
+      (should= #?(:cljd    speclj.run.standard/StandardRunner
+                  :default speclj.run.standard.StandardRunner) (platform/type-of runner))))
 
   (it "throws exception with unrecognized runner"
-    (should-throw platform/exception "Failed to load runner: blah" (sut/load-runner "blah")))
+    (should-throw #?(:cljs js/Error :default Exception)
+      "Failed to load runner: blah" (sut/load-runner "blah")))
 
   (it "dynamically loads ProgressReporter"
     (let [reporter (sut/load-reporter "progress")]
-      (should-not= nil reporter)
-      (should= speclj.report.progress.ProgressReporter (type reporter))))
+      (should-not-be-nil reporter)
+      (should= #?(:cljd    speclj.report.progress/ProgressReporter
+                  :default speclj.report.progress.ProgressReporter) (platform/type-of reporter))))
 
   (it "dynamically loads SilentReporter"
     (let [reporter (sut/load-reporter "silent")]
       (should-not-be-nil reporter)
-      (should= speclj.report.silent.SilentReporter (type reporter))))
+      (should= #?(:cljd    speclj.report.silent/SilentReporter
+                  :default speclj.report.silent.SilentReporter) (platform/type-of reporter))))
 
   (it "throws exception with unrecognized reporter"
-    (should-throw platform/exception "Failed to load reporter: blah" (sut/load-reporter "blah")))
+    (should-throw #?(:cljs js/Error :default Exception)
+      "Failed to load reporter: blah" (sut/load-reporter "blah")))
 
   (it "can be given a pre-fabricated reporter"
     (let [pre-fabricated-reporter (speclj.report.silent/new-silent-reporter)
           reporter                (sut/load-reporter pre-fabricated-reporter)]
-      (should-not= nil reporter)
+      (should-not-be-nil reporter)
       (should-be-same reporter pre-fabricated-reporter)))
 
   (it "converts tag input to includes/excludes"
@@ -49,8 +54,8 @@
      (list
        (it "dynamically loads VigilantRunner"
          (let [runner (sut/load-runner "vigilant")]
-           (should-not= nil runner)
-           (should= "speclj.run.vigilant.VigilantRunner" (platform/type-name (type runner)))))
+           (should-not-be-nil runner)
+           (should= "speclj.run.vigilant.VigilantRunner" (platform/type-name (platform/type-of runner)))))
 
        (it "should translate tags in config-bindings"
          (let [mappings (sut/config-mappings (assoc sut/default-config :tags ["one" "~two"]))]
@@ -60,7 +65,7 @@
        (it "doesn't include *parent-description* in config-bindings"
          (let [cb (sut/config-bindings)]
            (should-not-contain #'speclj.config/*parent-description* cb)))
-      )
+       )
      )
 
   (context "exporting"
@@ -69,4 +74,6 @@
     )
   )
 
-(standard/run-specs)
+;; TODO: These should be the same
+#?(:cljd    (speclj.core/run-specs)
+   :default (standard/run-specs))
