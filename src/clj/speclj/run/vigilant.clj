@@ -16,7 +16,7 @@
 (def start-time (atom 0))
 (def current-error-data (atom nil))
 
-(defn get-error-data [e]
+(defn- get-error-data [e]
   (-> e Throwable->map :via first :data))
 
 (defn- report-update [files start-time refresh-time]

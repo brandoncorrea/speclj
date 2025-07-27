@@ -90,9 +90,9 @@
     (it "option names are required"
       (let [spec (sut/create-args)]
         (should-throw #?(:clj RuntimeException :cljs js/Error :cljr SystemException :cljd Exception) #"Options require a shortName and fullName"
-                      (sut/add-switch-option spec "a" nil nil))
+          (sut/add-switch-option spec "a" nil nil))
         (should-throw #?(:clj RuntimeException :cljs js/Error :cljr SystemException :cljd Exception) #"Options require a shortName and fullName"
-                      (sut/add-switch-option spec nil "a-option" nil))
+          (sut/add-switch-option spec nil "a-option" nil))
         (should-not-throw (sut/add-switch-option spec "a" "a-option" nil))))
 
     (it "unrecognized option"
@@ -346,5 +346,3 @@
       )
     )
   )
-
-(run-specs)

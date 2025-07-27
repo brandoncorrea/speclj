@@ -48,23 +48,24 @@
     `(speclj.components/new-characteristic ~name (fn [] ~@body) ~focused?)
     `(speclj.components/new-characteristic ~name (fn [] (pending)) ~focused?)))
 
-(defmacro -current-ns []
-  #?(:cljd    `(-> &env :nses :current-ns)
-     :default `(speclj.platform/get-name *ns*)))
-
 (defmacro ^:no-doc -help-describe [name focused? & components]
-  `(let [ns-name#     ~(clojure.core/name (-current-ns))
-         description# (speclj.components/new-description ~name ~focused? ns-name#)]
-     (binding [speclj.config/*parent-description* description#]
-       ; MDM - use a vector below - cljs generates a warning because def/declares don't eval immediately
-       (doseq [component# (vector ~@components)]
-         (speclj.components/install component# description#)))
-     (when-not (speclj.config/parent-description-bound?)
-       (speclj.running/submit-description (speclj.config/active-runner) description#))
-     description#))
+  (let [ns-name #?(:cljd (-> &env :nses :current-ns clojure.core/name)
+                   :default (clojure.core/name (speclj.platform/get-name *ns*)))]
+    `(let [description# (speclj.components/new-description ~name ~focused? ~ns-name)]
+       (binding [speclj.config/*parent-description* description#]
+         ; MDM - use a vector below - cljs generates a warning because def/declares don't eval immediately
+         (doseq [component# (vector ~@components)]
+           (speclj.components/install component# description#)))
+       (when-not (speclj.config/parent-description-bound?)
+         (speclj.running/submit-description (speclj.config/active-runner) description#))
+       description#)))
 
 (defmacro ^:no-doc help-describe [name focused? & components]
-  `(-help-describe ~name ~focused? ~@components))
+  (let [sym (vary-meta (gensym "describe") {::describe true})]
+    `(if (speclj.config/parent-description-bound?)
+       (-help-describe ~name ~focused? ~@components)
+       (do (def ~sym (-help-describe ~name ~focused? ~@components))
+           ~sym))))
 
 (defmacro ^:no-doc help-should [& body]
   `(do (speclj.components/inc-assertions!)
